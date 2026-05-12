@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "bull": "^4.16.5",
     "bullmq": "^5.76.6",
     "compression": "^1.8.1",
     "cors": "^2.8.6",

@@ -43,7 +43,7 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     paymentStatus: {
-      type: Sting,
+      type: String,
       enum: ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },

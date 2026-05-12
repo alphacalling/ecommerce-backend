@@ -24,4 +24,4 @@ const viewHistorySchema = new mongoose.Schema(
 viewHistorySchema.index({ productId: 1, createdAt: -1 });
 viewHistorySchema.index({ userId: 1, createdAt: -1 });
 
-module.exports = mongoose.modell("ViewHistory", viewHistorySchema);
+module.exports = mongoose.model("ViewHistory", viewHistorySchema);

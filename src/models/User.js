@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["user", "admin"],
-      default: user,
+      default: 'user'
     },
     isVerified: {
       type: Boolean,
@@ -62,10 +62,10 @@ const userSchema = new mongoose.Schema(
 );
 
 // hash password before db save
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 12);
-  next();
+  // next();
 });
 
 // password compare
@@ -75,7 +75,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 // session clean
 userSchema.methods.cleanupSessions = function () {
-  const thirtyDayAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   this.sessions = this.sessions.filter(
     (session) => session.lastActivity > thirtyDaysAgo,
   );
