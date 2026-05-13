@@ -1,16 +1,18 @@
 const express = require("express");
-const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
 const { generateOTP } = require("../utils/helper");
 const cacheService = require("../services/cacheService");
 const { queueService } = require("../services/queueService");
 const emailService = require("../services/emailService");
+const { body, validationResult } = require("express-validator");
+const {
+  authLimiter,
+  otpLimiter,
+} = require("../middlewares/rateLimitMiddleware");
 const { protect, optionalAuth } = require("../middlewares/authMiddleware");
-const { authLimiter, otpLimiter } = require("../middlewares/rateLimitMiddleware");
 
-
-// register user s
+// register users
 const registerUser = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -31,8 +33,7 @@ const registerUser = async (req, res) => {
     }
     const otp = generateOTP();
     const otpExpiry = new Date(
-      Date.now() + parseInt(process.env.OTP_EXPIRY),
-      // 1000,
+      Date.now() + parseInt(process.env.OTP_EXPIRY) * 1000,
     );
 
     user = await User.create({
@@ -131,7 +132,7 @@ const verifyOtp = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error",
-      error: error.message,
+      error: err.message,
     });
   }
 };
@@ -156,7 +157,7 @@ const resendOtp = async (req, res) => {
     }
     if (user.isVerified) {
       return res.status(400).json({
-        success: fasle,
+        success: false,
         message: "Email already verified",
       });
     }
@@ -183,11 +184,11 @@ const resendOtp = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Resend OTP error:", error);
+    console.error("Resend OTP error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
-      error: error.message,
+      error: err.message,
     });
   }
 };
@@ -260,13 +261,109 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Resend OTP error:", error);
+    console.error("Resend OTP error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
-      error: error.message,
+      error: err.message,
     });
   }
 };
 
-module.exports = { registerUser, verifyOtp, resendOtp, loginUser };
+// logout
+const logoutUser = async (req, res) => {
+  try {
+    await User.updateOne(
+      { _id: req.user._id },
+      { $pull: { sessions: { token: req.token } } },
+    );
+    res.json({
+      success: true,
+      message: "Logout Successfully",
+    });
+  } catch (err) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// me
+const me = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        user: req.user,
+      },
+    });
+  } catch (err) {
+    console.error("Get user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// getSession
+const getSession = async (req, res) => {
+  try {
+    const user = await User.findOne(req.user._id);
+    const sessions = user.sessions.map((session) => ({
+      deviceInfo: session.deviceInfo,
+      ip: session.ip,
+      createdAt: session.createdAt,
+      lastActivity: session.lastActivity,
+      isCurrent: session.token === req.token,
+    }));
+
+    res.json({
+      success: true,
+      data: { sessions },
+    });
+  } catch (err) {
+    console.error("Get user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// deleteSession
+const deleteSession = async (req, res) => {
+  try {
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set: { sessions: [{ token: req.token }] } },
+    );
+    res.json({
+      success: true,
+      message: "Logged out from all other devices",
+    });
+  } catch (err) {
+    console.error("Get user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+module.exports = {
+  me,
+  verifyOtp,
+  resendOtp,
+  loginUser,
+  logoutUser,
+  getSession,
+  registerUser,
+  deleteSession,
+};

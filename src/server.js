@@ -31,14 +31,14 @@ app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
-app.use("/api/auth", authRoutes);
-
 // Global rate limiting
 app.use(apiLimiter);
 
 // Analytics tracking
 app.use(trackRequest);
+
+// API Routes
+app.use("/api/auth", authRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const userSchema = require("../models/User");
+const cacheService = require("../services/cacheService");
 
 exports.protect = async (req, res, next) => {
   try {
@@ -8,7 +9,7 @@ exports.protect = async (req, res, next) => {
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
-      token = req.headers.authorization.split("")[1];
+      token = req.headers.authorization.split(" ")[1];
     }
     if (!token) {
       return res.status(401).json({
@@ -19,6 +20,7 @@ exports.protect = async (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await userSchema.findById(decoded.id);
 
       if (!user) {
         return res.status(401).json({
@@ -27,7 +29,7 @@ exports.protect = async (req, res, next) => {
         });
       }
       // checking if token in active session
-      const sessionExits = user.sessions.some(
+      const sessionExists = user.sessions.some(
         (session) => session.token === token,
       );
 
