@@ -11,6 +11,7 @@ const { apiLimiter } = require("./middlewares/rateLimitMiddleware");
 const notificationService = require("./services/notificationService");
 const { trackRequest } = require("./middlewares/analyticsMiddleware");
 const authRoutes = require("./routes/authRoute");
+const productRoutes = require("./routes/productRoute");
 
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +40,7 @@ app.use(trackRequest);
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/product", productRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

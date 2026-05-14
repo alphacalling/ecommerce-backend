@@ -261,7 +261,7 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Resend OTP error:", err);
+    console.error("failed to login Error: ", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -282,7 +282,7 @@ const logoutUser = async (req, res) => {
       message: "Logout Successfully",
     });
   } catch (err) {
-    console.error("Logout error:", error);
+    console.error("Logout error: ", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -301,7 +301,7 @@ const me = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get user error:", error);
+    console.error("Get user error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -327,7 +327,7 @@ const getSession = async (req, res) => {
       data: { sessions },
     });
   } catch (err) {
-    console.error("Get user error:", error);
+    console.error("failed to get session:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -348,7 +348,7 @@ const deleteSession = async (req, res) => {
       message: "Logged out from all other devices",
     });
   } catch (err) {
-    console.error("Get user error:", error);
+    console.error("failed to delete session:", err);
     res.status(500).json({
       success: false,
       message: "Server error",

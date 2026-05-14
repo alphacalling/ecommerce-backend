@@ -4,7 +4,7 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      reuired: true,
+      required: true,
       trim: true,
       index: "text",
     },
@@ -24,7 +24,7 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      reuired: true,
+      required: true,
       index: true,
     },
     stock: {
@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    flsahSale: {
+    flashSale: {
       isActive: { type: Boolean, default: false },
       startTime: Date,
       endTime: Date,
@@ -54,6 +54,10 @@ const productSchema = new mongoose.Schema(
       average: { type: Number, default: 0 },
       count: { type: Number, default: 0 },
     },
+    purchaseCount:{
+      type:Number,
+      default:0
+    },
     trending: {
       score: { type: Number, default: 0 },
       lastCalculated: Date,
@@ -63,18 +67,20 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// text score 
+// text score
 productSchema.index({ name: "text", description: "text", tags: "text" });
 
-// trending score 
+// trending score
 productSchema.methods.calculateTrendingScore = function () {
   const hourSinceCreation = (Date.now() - this.createdAt) / (1000 * 60 * 60);
-  const viewScore = this.count * 1;
+  const viewScore = this.viewCount * 1;
   const purchaseScore = this.purchaseCount * 10;
   const ratingScore = this.rating.average * this.rating.count * 5;
 
   this.trending.score =
     (viewScore + purchaseScore + ratingScore) /
-    Math.pow(hoursSinceCreation + 2, 1.5);
+    Math.pow(hourSinceCreation + 2, 1.5);
   this.trending.lastCalculated = new Date();
 };
+
+module.exports = mongoose.model("Product", productSchema);

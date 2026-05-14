@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const userSchema = require("../models/User");
 const cacheService = require("../services/cacheService");
 
+// protect 
 exports.protect = async (req, res, next) => {
   try {
     let token;
@@ -60,14 +61,15 @@ exports.protect = async (req, res, next) => {
   }
 };
 
+// optionalAuth 
 exports.optionalAuth = async (req, res, next) => {
   try {
     let token;
     if (
-      req.hearders.authorization &&
+      req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
-      token = req.headers.authorization.split("")[1];
+      token = req.headers.authorization.split(" ")[1];
     }
     if (token) {
       try {
@@ -78,13 +80,14 @@ exports.optionalAuth = async (req, res, next) => {
           req.user = user;
         }
       } catch (err) {}
-      next();
     }
+    next();
   } catch (err) {
     next(err);
   }
 };
 
+// admin only 
 exports.adminOnly = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
@@ -96,6 +99,7 @@ exports.adminOnly = (req, res, next) => {
   }
 };
 
+// verified only 
 exports.verifiedOnly = (req, res, next) => {
   if (req.user && req.user.isVerified) {
     next();
