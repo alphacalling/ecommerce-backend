@@ -7,11 +7,14 @@ const socketIO = require("socket.io");
 const compression = require("compression");
 const { redis } = require("./configs/redis");
 const connectDB = require("./configs/database");
+
 const { apiLimiter } = require("./middlewares/rateLimitMiddleware");
 const notificationService = require("./services/notificationService");
 const { trackRequest } = require("./middlewares/analyticsMiddleware");
+
 const authRoutes = require("./routes/authRoute");
 const productRoutes = require("./routes/productRoute");
+const orderRoutes = require("./routes/orderRoute");
 
 const app = express();
 const server = http.createServer(app);
@@ -41,6 +44,7 @@ app.use(trackRequest);
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/product", productRoutes);
+app.use("/api/order", orderRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

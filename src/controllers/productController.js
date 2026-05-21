@@ -324,8 +324,6 @@ const createFlashSale = async (req, res) => {
       });
     }
     const { startTime, endTime, discountPercentage, maxQuantity } = req.body;
-    console.error("req.body: ", req.body);
-    console.error("req.params.id..", req.params.id);
 
     const product = await Product.findById(req.params.id);
     if (!product) {

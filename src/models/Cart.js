@@ -29,7 +29,7 @@ const cartSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       default: () => {
-        new Date(Date.now() + 30 * 60 * 1000);
+        return new Date(Date.now() + 30 * 60 * 1000);
       },
     },
   },

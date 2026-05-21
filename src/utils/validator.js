@@ -32,6 +32,20 @@ const flashSaleValidation = [
   body("discountPercentage").isFloat({ min: 0, max: 100 }),
 ];
 
+const addToCartValidation = [
+  body("productId").isMongoId(),
+  body("quantity").isInt({ min: 1 }),
+];
+
+const checkoutValidator = [
+  body("shippingAddress").isObject(),
+  body("shippingAddress.street").trim().notEmpty(),
+  body("shippingAddress.city").trim().notEmpty(),
+  body("shippingAddress.state").trim().notEmpty(),
+  body("shippingAddress.zipCode").trim().notEmpty(),
+  body("shippingAddress.country").trim().notEmpty(),
+];
+
 module.exports = {
   registerValidation,
   otpValidation,
@@ -39,4 +53,6 @@ module.exports = {
   loginValidation,
   flashSaleValidation,
   createProductValidation,
+  addToCartValidation,
+  checkoutValidator,
 };
