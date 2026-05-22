@@ -86,6 +86,14 @@ class CacheService {
     return await this.get(`flash:products`);
   }
 
+  async cacheNewArrivals(products) {
+    return await this.set(`new:arrivals`, products, 600);
+  }
+
+  async getCachedNewArrivals() {
+    return await this.get(`new:arrivals`);
+  }
+
   // User session tracking
   async trackUserSession(userId, sessionData) {
     const key = `session:${userId}`;

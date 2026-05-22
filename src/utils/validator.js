@@ -37,6 +37,11 @@ const addToCartValidation = [
   body("quantity").isInt({ min: 1 }),
 ];
 
+const bannerValidation = [
+  body("title").trim().notEmpty().withMessage("Title is required"),
+  body("image").trim().notEmpty().withMessage("Image URL is required"),
+];
+
 const checkoutValidator = [
   body("shippingAddress").isObject(),
   body("shippingAddress.street").trim().notEmpty(),
@@ -55,4 +60,5 @@ module.exports = {
   createProductValidation,
   addToCartValidation,
   checkoutValidator,
+  bannerValidation,
 };

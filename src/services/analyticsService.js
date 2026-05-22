@@ -1,5 +1,5 @@
 const cacheService = require("./cacheService");
-const viewHistory = require("../models/ViewHistory");
+const ViewHistory = require("../models/ViewHistory");
 const SearchHistory = require("../models/SearchHistory");
 const Order = require("../models/Order");
 const { redis } = require("../configs/redis");

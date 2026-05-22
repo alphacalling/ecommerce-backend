@@ -2,16 +2,35 @@ const jwt = require("jsonwebtoken");
 const userSchema = require("../models/User");
 const cacheService = require("../services/cacheService");
 
-// protect 
+const ACTIVITY_THROTTLE_MS = 60 * 1000;
+const lastActivityWrite = new Map();
+
+const shouldWriteActivity = (userId) => {
+  const now = Date.now();
+  const prev = lastActivityWrite.get(userId) || 0;
+  if (now - prev < ACTIVITY_THROTTLE_MS) return false;
+  lastActivityWrite.set(userId, now);
+  return true;
+};
+
+const extractToken = (req) => {
+  if (req.signedCookies && req.signedCookies.authToken) {
+    return req.signedCookies.authToken;
+  }
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    return req.headers.authorization.split(" ")[1];
+  }
+  return null;
+};
+
+// protect
 exports.protect = async (req, res, next) => {
   try {
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
+    const token = extractToken(req);
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -19,58 +38,78 @@ exports.protect = async (req, res, next) => {
       });
     }
 
+    let decoded;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await userSchema.findById(decoded.id);
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: "User no longer exists",
-        });
-      }
-      // checking if token in active session
-      const sessionExists = user.sessions.some(
-        (session) => session.token === token,
-      );
-
-      if (!sessionExists) {
-        return res.status(401).json({
-          success: false,
-          message: "Session expired or invalid",
-        });
-      }
-      // updating last acitvity
-      await userSchema.updateOne(
-        { _id: user._id, session_token: token },
-        { $set: { "session.$.lastActivity": new Date() } },
-      );
-      // tracing session inRedis
-      await cacheService.trackUserSession(user._id.toString(), {
-        lastActivity: Date.now(),
-        ip: req.ip,
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
       });
-      req.user = user;
-      req.token = token;
-      next();
-    } catch (err) {
-      next(err);
+    }
+
+    const user = await userSchema.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User no longer exists",
+      });
+    }
+
+    // checking if token in active session
+    const sessionExists = user.sessions.some(
+      (session) => session.token === token,
+    );
+
+    if (!sessionExists) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired or invalid",
+      });
+    }
+
+    req.user = user;
+    req.token = token;
+    next();
+
+    if (shouldWriteActivity(user._id.toString())) {
+      const now = new Date();
+      userSchema
+        .updateOne(
+          { _id: user._id, "sessions.token": token },
+          { $set: { "sessions.$.lastActivity": now } },
+        )
+        .catch((err) => console.error("Activity update error:", err.message));
+
+      cacheService
+        .trackUserSession(user._id.toString(), {
+          lastActivity: Date.now(),
+          ip: req.ip,
+        })
+        .catch((err) =>
+          console.error("Redis session track error:", err.message),
+        );
     }
   } catch (err) {
     next(err);
   }
 };
 
-// optionalAuth 
+// optionalAuth
 exports.optionalAuth = async (req, res, next) => {
   try {
     let token;
-    if (
+
+    if (req.signedCookies && req.signedCookies.authToken) {
+      token = req.signedCookies.authToken;
+    } else if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
       token = req.headers.authorization.split(" ")[1];
     }
+
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -87,7 +126,7 @@ exports.optionalAuth = async (req, res, next) => {
   }
 };
 
-// admin only 
+// admin only
 exports.adminOnly = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();
@@ -99,7 +138,7 @@ exports.adminOnly = (req, res, next) => {
   }
 };
 
-// verified only 
+// verified only
 exports.verifiedOnly = (req, res, next) => {
   if (req.user && req.user.isVerified) {
     next();

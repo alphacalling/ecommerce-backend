@@ -8,6 +8,8 @@ const {
   me,
   getSession,
   deleteSession,
+  listUsers,
+  updateUserRole,
 } = require("../controllers/authController");
 const {
   registerValidation,
@@ -17,7 +19,7 @@ const {
 } = require("../utils/validator");
 
 const { authLimiter } = require("../middlewares/rateLimitMiddleware");
-const { protect } = require("../middlewares/authMiddleware");
+const { protect, adminOnly } = require("../middlewares/authMiddleware");
 
 router.post("/register", registerValidation, authLimiter, registerUser);
 router.post("/verify-otp", otpValidation, authLimiter, verifyOtp);
@@ -27,5 +29,9 @@ router.post("/logout", protect, logoutUser);
 router.get("/me", protect, me);
 router.get("/session", protect, getSession);
 router.delete("/session", protect, deleteSession);
+
+// Admin user management
+router.get("/users", protect, adminOnly, listUsers);
+router.put("/users/:id/role", protect, adminOnly, updateUserRole);
 
 module.exports = router;
