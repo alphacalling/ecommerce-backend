@@ -16,6 +16,11 @@ const authRoutes = require("./routes/authRoute");
 const productRoutes = require("./routes/productRoute");
 const orderRoutes = require("./routes/orderRoute");
 
+// Initialize workers
+require("./workers/emailWorker");
+require("./workers/orderWorker");
+require("./workers/cartExpiryWorker");
+
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT;

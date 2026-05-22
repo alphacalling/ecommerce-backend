@@ -15,8 +15,8 @@ class EmailService {
                 body{font-family:Arial, sans-serif; line-height:1.6; color:#333;}
                 .container{max-width:600px; margin:0 auto; padding:20px;}
                 .header{background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                 color:white padding:30px; text-align:center; border-radius: 10px 10px 0 0;}
-                .content{background: #f9f9f9; padding:30px; border:30px border-radius; 0 0 10px 10px;}
+                 color:white; padding:30px; text-align:center; border-radius: 10px 10px 10px 10px;}
+                .content{background: #f9f9f9; padding:30px; border-radius: 0 0 10px 10px;}
                 .otp-box{background: white; border:2px dashed #667eea; padding:20px; text-align:center; font-size:32px;
                  font-weight:bold; letter-spacing:5px; margin:20px 0; border-radius:10px;}
                 .footer{text-align: center; margin-top:20px; font-size:12px; color:#666;}
@@ -26,7 +26,7 @@ class EmailService {
         <body>
         <div class="container">
             <div class="header">
-                <h1>🛒 E-Commerce Platform</h1>
+                <h1>🛒 e-Shopping Platform</h1>
                 <p>Email Verification</p>
             </div>
             <div class="content">
@@ -41,7 +41,7 @@ class EmailService {
              <p>If you didn't request this OTP, please ignore this email.</p>
             </div>
             <div class="footer">
-                <p>© 2026 E-Commerce Platform. All rights reserved.</p>
+                <p>© 2026 e-Shopping Platform. All rights reserved @codervikas.</p>
                 <p>This is an automated email. Please do not reply.</p>
             </div>
         </div>
@@ -54,7 +54,7 @@ class EmailService {
       return { success: true };
     } catch (err) {
       console.error("Email send error: ", err);
-      return { success: false, error: error.message };
+      return { success: false, error: err.message };
     }
   }
 
@@ -63,7 +63,7 @@ class EmailService {
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: "Welcome to Our E-commerce Platform!",
+      subject: "Welcome to Our e-Shopping Platform!",
       html: `
         <!DOCTYPE html>
             <html>
@@ -85,7 +85,7 @@ class EmailService {
                 </div>
                 <div class="content">
                     <h2>Hi ${name}!</h2>
-                    <p>Your email has been successfully verified. Welcome to our e-commerce platform!</p>
+                    <p>Your email has been successfully verified. Welcome to our e-shopping platform!</p>
                 <div class="features">
                     <div class="feature">
                         <h3>🚀 Fast Delivery</h3>
@@ -119,8 +119,8 @@ class EmailService {
       await transporter.sendMail(mailOptions);
       return { success: true };
     } catch (err) {
-      console.error("Email send error: ", error);
-      return { success: false, error: error.message };
+      console.error("Email send error: ", err);
+      return { success: false, error: err.message };
     }
   }
 
@@ -193,7 +193,7 @@ class EmailService {
                       </tr>
                     </thead>
                     <tbody>
-                        ${itemsHtml}
+                        ${itemHtml}
                     </tbody>
                   </table>
                   <div class="total">Total: $${totalAmount.toFixed(2)}</div>
@@ -221,7 +221,7 @@ class EmailService {
       return { success: true };
     } catch (err) {
       console.error("Email send error: ", err);
-      return { success: false, error: error.message };
+      return { success: false, error: err.message };
     }
   }
 }

@@ -51,7 +51,7 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Registration successful. Please ceck your email for OTP",
+      message: "Registration successful. Please check your email for OTP",
       data: {
         email: user.email,
         name: user.name,
