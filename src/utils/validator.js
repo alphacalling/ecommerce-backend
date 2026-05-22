@@ -18,6 +18,31 @@ const otpValidation = [
 
 const resendOtpValidation = [body("email").isEmail()];
 
+const forgotPasswordValidation = [body("email").isEmail()];
+
+const resetPasswordValidation = [
+  body("email").isEmail(),
+  body("code")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("Code must be 6 digits"),
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
+];
+
+const changePasswordValidation = [
+  body("currentPassword").isLength({ min: 6 }),
+  body("newPassword")
+    .isLength({ min: 6 })
+    .withMessage("New password must be at least 6 characters")
+    .custom((value, { req }) => {
+      if (value === req.body.currentPassword) {
+        throw new Error("New password must be different from current password");
+      }
+      return true;
+    }),
+];
+
 const createProductValidation = [
   body("name").trim().notEmpty(),
   body("description").trim().notEmpty(),
@@ -61,4 +86,7 @@ module.exports = {
   addToCartValidation,
   checkoutValidator,
   bannerValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
+  changePasswordValidation,
 };

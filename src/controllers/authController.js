@@ -501,6 +501,142 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const genericResponse = {
+      success: true,
+      message:
+        "If an account exists for that email, a reset code has been sent.",
+    };
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const code = generateOTP();
+    const ttlSeconds = parseInt(process.env.OTP_EXPIRY) || 600;
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+
+    user.passwordReset = { code, expiresAt };
+    await user.save();
+
+    await cacheService.storeResetCode(email, code, ttlSeconds);
+    await queueService.sendPasswordResetEmail(email, code, user.name);
+
+    return res.json(genericResponse);
+  } catch (err) {
+    console.error("forgotPassword error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { email, code, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset code",
+      });
+    }
+
+    const cachedCode = await cacheService.getResetCode(email);
+    const persistedValid =
+      user.passwordReset?.code === code &&
+      user.passwordReset?.expiresAt instanceof Date &&
+      user.passwordReset.expiresAt > new Date();
+
+    const isValid = cachedCode === code || persistedValid;
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset code",
+      });
+    }
+
+    user.password = password;
+    user.passwordReset = undefined;
+    user.sessions = [];
+    await user.save();
+
+    await cacheService.deleteResetCode(email);
+
+    res.clearCookie("authToken", { path: "/" });
+
+    res.json({
+      success: true,
+      message:
+        "Password reset successful. Please log in with your new password.",
+    });
+  } catch (err) {
+    console.error("resetPassword error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const valid = await user.comparePassword(currentPassword);
+    if (!valid) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    user.password = newPassword;
+    user.sessions = user.sessions.filter((s) => s.token === req.token);
+    await user.save();
+
+    res.json({
+      success: true,
+      message:
+        "Password changed successfully. Other devices have been signed out.",
+    });
+  } catch (err) {
+    console.error("changePassword error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   me,
   verifyOtp,
@@ -512,4 +648,7 @@ module.exports = {
   deleteSession,
   listUsers,
   updateUserRole,
+  forgotPassword,
+  resetPassword,
+  changePassword,
 };

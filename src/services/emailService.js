@@ -469,6 +469,91 @@ class EmailService {
       return { success: false, error: err.message };
     }
   }
+
+  // Password reset email
+  async sendPasswordResetEmail(email, code, name) {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: "Reset your password",
+
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <body style="margin:0; padding:0; background:#f4f4f4; font-family:Arial,sans-serif;">
+          <div style="max-width:600px; margin:40px auto; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e5e5;">
+
+            <div style="background:#7c3aed; color:#ffffff; padding:35px 25px; text-align:center;">
+              <h1 style="margin:0; font-size:28px;">🔑 Password Reset</h1>
+              <p style="margin-top:10px; font-size:16px;">Use the code below to reset your password</p>
+            </div>
+
+            <div style="padding:35px 30px;">
+              <h2 style="margin-top:0; color:#333;">Hi ${name || "there"},</h2>
+              <p style="color:#555; line-height:1.7;">
+                We received a request to reset the password for your account.
+                Enter this code in the password reset page to continue:
+              </p>
+
+              <div style="
+                background:#ffffff;
+                border:2px dashed #7c3aed;
+                padding:20px;
+                text-align:center;
+                font-size:34px;
+                font-weight:bold;
+                letter-spacing:6px;
+                margin:30px 0;
+                border-radius:10px;
+                color:#333;
+              ">
+                ${code}
+              </div>
+
+              <p style="color:#555;">
+                This code is valid for <strong>10 minutes</strong>.
+              </p>
+
+              <div style="
+                background:#fef2f2;
+                border-left:4px solid #ef4444;
+                padding:15px;
+                margin:25px 0;
+                border-radius:6px;
+                color:#7f1d1d;
+              ">
+                <strong>⚠️ Didn't request this?</strong><br>
+                If you didn't ask to reset your password, you can safely ignore
+                this email — your password will stay the same.
+              </div>
+            </div>
+
+            <div style="
+              text-align:center;
+              padding:20px;
+              font-size:12px;
+              color:#888;
+              background:#fafafa;
+              border-top:1px solid #eeeeee;
+            ">
+              <p style="margin:0 0 8px 0;">© 2026 e-Shopping Platform. All rights reserved.</p>
+              <p style="margin:0;">This is an automated email. Please do not reply.</p>
+            </div>
+
+          </div>
+        </body>
+      </html>
+    `,
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      return { success: true };
+    } catch (err) {
+      console.error("Email send error:", err);
+      return { success: false, error: err.message };
+    }
+  }
 }
 
 module.exports = new EmailService();

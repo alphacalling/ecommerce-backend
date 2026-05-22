@@ -48,6 +48,14 @@ class QueueService {
     return await this.addEmailJob("send-welcome", { email, name });
   }
 
+  async sendPasswordResetEmail(email, code, name) {
+    return await this.addEmailJob(
+      "send-password-reset",
+      { email, code, name },
+      { priority: 1 },
+    );
+  }
+
   async sendOrderConfirmation(email, orderDetails) {
     return await this.addEmailJob("send-order-confirmation", {
       email,

@@ -121,6 +121,21 @@ class CacheService {
     await redis.del(key);
   }
 
+  async storeResetCode(email, code, expirySeconds = 600) {
+    const key = `pwreset:${email}`;
+    await redis.setex(key, expirySeconds, code);
+  }
+
+  async getResetCode(email) {
+    const key = `pwreset:${email}`;
+    return await redis.get(key);
+  }
+
+  async deleteResetCode(email) {
+    const key = `pwreset:${email}`;
+    await redis.del(key);
+  }
+
   async incrementRateLimit(identifier, windowSeconds = 900) {
     const key = `ratelimit:${identifier}`;
     const current = await redis.incr(key);

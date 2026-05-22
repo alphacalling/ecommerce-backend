@@ -10,15 +10,24 @@ const {
   deleteSession,
   listUsers,
   updateUserRole,
+  forgotPassword,
+  resetPassword,
+  changePassword,
 } = require("../controllers/authController");
 const {
   registerValidation,
   otpValidation,
   resendOtpValidation,
   loginValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
+  changePasswordValidation,
 } = require("../utils/validator");
 
-const { authLimiter } = require("../middlewares/rateLimitMiddleware");
+const {
+  authLimiter,
+  otpLimiter,
+} = require("../middlewares/rateLimitMiddleware");
 const { protect, adminOnly } = require("../middlewares/authMiddleware");
 
 router.post("/register", registerValidation, authLimiter, registerUser);
@@ -29,6 +38,27 @@ router.post("/logout", protect, logoutUser);
 router.get("/me", protect, me);
 router.get("/session", protect, getSession);
 router.delete("/session", protect, deleteSession);
+
+// Password management
+router.post(
+  "/forgot-password",
+  forgotPasswordValidation,
+  otpLimiter,
+  forgotPassword,
+);
+router.post(
+  "/reset-password",
+  resetPasswordValidation,
+  authLimiter,
+  resetPassword,
+);
+router.put(
+  "/change-password",
+  protect,
+  changePasswordValidation,
+  authLimiter,
+  changePassword,
+);
 
 // Admin user management
 router.get("/users", protect, adminOnly, listUsers);

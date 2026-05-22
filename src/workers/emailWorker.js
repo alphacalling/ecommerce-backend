@@ -25,6 +25,16 @@ emailQueue.process("send-welcome", async (job) => {
   return result;
 });
 
+emailQueue.process("send-password-reset", async (job) => {
+  const { email, code, name } = job.data;
+  console.log(`Sending password-reset email to ${email}`);
+  const result = await emailService.sendPasswordResetEmail(email, code, name);
+  if (!result.success) {
+    throw new Error(result.error);
+  }
+  return result;
+});
+
 emailQueue.process("send-order-confirmation", async (job) => {
   const { email, orderDetails } = job.data;
   console.log(`Sending order confirmation to ${email}`);
